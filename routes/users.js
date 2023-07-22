@@ -47,7 +47,8 @@ router.route('/login').post((req, res) => {
         res.json({
             token: token,
             refresh_token: refresh_token,
-            roles: roles
+            roles: roles,
+            userId: results[0].id
         })
     })
 })
