@@ -7,9 +7,31 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME
 })
 
-db.connect(err => {
-    if (err) throw err
-    console.log("Database connection established Successfully!")
-})
+const timeNow = new Date().getSeconds;
+let isConnected = false;
+
+async function testConnection() {
+    while(new Date().getSeconds < timeNow + 20000) {
+        await new Promise(r => setTimeout(r, 5000))
+        db.connect(err => {
+            if (err) {
+                console.error("database connection failed: " + err)
+                isConnected = false
+            } else {
+                console.log("Database connection established Successfully!")
+                isConnected = true
+            }
+        })
+        if (isConnected) {
+            break
+        }
+    }
+}
+
+testConnection();
+
+if (!isConnected) {
+    console.error("Failed to connect to database...")
+}
 
 module.exports = db
