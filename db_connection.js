@@ -1,17 +1,36 @@
 const mysql = require('mysql');
+const MySqlContainer = require('testcontainers')
+
+var isInTest = typeof global.it === 'function';
+var container
+
+if (isInTest) {
+    console.log("In Test: Loading Test Container...")
+    container = new MySqlContainer().constructor();
+    console.log(container)
+    startTestContainer()
+    
+}
 
 const db = mysql.createConnection({
-    host: process.env.DB_HOST,
+    host: (isInTest) ? container.getHost() : process.env.DB_HOST,
+    port: (isInTest) ? container.getPort() : 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME
 })
 
-const timeNow = new Date().getSeconds;
+const timeNow = new Date().getUTCSeconds();
 let isConnected = false;
 
+testConnection();
+
+if (!isConnected) {
+    console.error("Failed to connect to database...")
+}
+
 async function testConnection() {
-    while(new Date().getSeconds < timeNow + 20000) {
+    while(new Date().getUTCSeconds() < timeNow + 20000) {
         await new Promise(r => setTimeout(r, 5000))
         db.connect(err => {
             if (err) {
@@ -28,10 +47,10 @@ async function testConnection() {
     }
 }
 
-testConnection();
-
-if (!isConnected) {
-    console.error("Failed to connect to database...")
+async function startTestContainer() {
+    await container.start().then(res => {
+        console.log("Server Started")
+    })
 }
 
 module.exports = db

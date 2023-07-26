@@ -43,4 +43,39 @@ router.route("/add").post(funs.AuthenticateToken, (req, res) => {
 
 })
 
+router.route("/update/:id").put(funs.AuthenticateToken, (req, res) => {
+    valsArray = Object.values(req.body)
+    zippedArray = Object.keys(req.body).map((e, i) => {
+        return [e, valsArray[i]]
+    })
+    query_string = `update Todos set ${zippedArray.map(e => {
+        if (typeof(e[1]) === typeof("")) {
+            return `${e[0]} = "${e[1]}"`
+        }
+        else {
+            return `${e[0]} = ${e[1]}`
+        }
+    }).join(",")} where id = ${req.params.id};`
+    db.query(query_string, (err, results, fields) => {
+        if (err) {
+            console.log(err)
+            return res.status(400).json(err)
+        }
+        res.contentType('application/json')
+        res.json("Todo Updated!")
+    })
+})
+
+router.route("/delete/:id").delete(funs.AuthenticateToken, (req, res) => {
+    query_string = `delete from Todos where id = ${req.params.id};`
+    db.query(query_string, (err, results, fields) => {
+        if (err) {
+            console.log(err)
+            return res.status(400).json(err)
+        }
+        res.contentType('application/json')
+        res.json("Todo Deleted!")
+    })
+})
+
 module.exports = router
